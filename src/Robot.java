@@ -39,7 +39,7 @@ public class Robot {
 	/**
 	 * Vitesse de déplacement du Robot (unité : cases par seconde, ie m/s)
 	 */
-	private double vitesse = 2;
+	private double vitesse = 10;
 	/**
 	 * Indique si le robot est détruit ou non, un robot détruit ne peut plus se
 	 * déplacer
