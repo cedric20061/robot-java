@@ -85,7 +85,7 @@ Le simulateur doit permettre de valider l’**algorithme de déplacement du robo
 2. Compiler le projet :
 
    ```bash
-   javac -d bin src/*.java
+   javac -d bin -encoding ISO-8859-1 src/*.java
    ```
 
 3. Lancer la simulation :
