@@ -86,30 +86,17 @@ public class SimulateurAppX {
 		int fieldExplore = 0;  // compteur de cases explorées
 		
 		// Boucle principale : exploration du terrain
-		while(true) {
-			fieldExplore++; // on incrémente le nombre de cases explorées
-			
-			// Si toutes les victimes ont été trouvées → fin de la boucle
-			if(victimFound == victimNumber) {
-				break;
+		while((victimFound != victimNumber) && !(robot.getColonne() == 9 && (robot.getLigne() == 0))) {
+			// Gestion du déplacement en mode "serpentin" (aller-retour sur les lignes)
+			if((robot.getLigne() == 9 || robot.getLigne() == 0) && !(robot.getColonne() == 0 && robot.getLigne() == 0) && !(robot.getColonne() == 9 && robot.getLigne() == 0)) {
+		        victimFound += changeLine(robot, victimsFoundGravity);
+		        fieldExplore++;
+		    
 			}
-			
 			// Le robot avance et vérifie s’il trouve une victime
 			victimFound += avancerEtVerifier(robot, victimsFoundGravity);
+			fieldExplore++; // on incrémente le nombre de cases explorées
 			
-			// Gestion du déplacement en mode "serpentin" (aller-retour sur les lignes)
-			if(robot.getLigne() == 9 || robot.getLigne() == 0) {
-				// si le robot est dans un coin (bas droite ou haut droite) → fin
-				if (robot.getColonne() == 9 && (robot.getLigne() == 0 || robot.getLigne() == 9)) {
-					break;
-				}
-				
-				// sinon, changement de ligne pour continuer l’exploration
-				if (robot.getLigne() == 9 || robot.getLigne() == 0) {
-			        victimFound += changeLine(robot, victimsFoundGravity);
-			        fieldExplore++;
-			    }
-			}
 		}
 		
 		// Une fois toutes les victimes trouvées, on identifie la gravité la plus élevée
@@ -126,7 +113,19 @@ public class SimulateurAppX {
 		int count = 0; // compteur de victimes retrouvées avec cette gravité
 	
 		// Parcours de retour du robot jusqu’à avoir revu toutes les victimes les plus graves
-		while(true) {
+		while((count != occurency) && !(robot.getLigne() == 0 && robot.getColonne() == 0)) {
+			// Sinon, gestion du retour en serpentin
+			if (robot.getLigne() == 9 || robot.getLigne() == 0) {
+				changeLineReturn(robot);
+				if(robot.isSurVictime()) {
+					if(robot.detecterGravite() == higherGravity) {
+						count++;
+						// Message d’encouragement dans la langue choisie
+						System.out.printf("%s !\n", sentences[language-1][2]);
+						JOptionPane.showMessageDialog(null, sentences[language-1][2]);
+					}
+				}
+		    }
 			if(robot.isSurVictime()) {
 				if(robot.detecterGravite() == higherGravity) {
 					count++;
@@ -135,19 +134,9 @@ public class SimulateurAppX {
 					JOptionPane.showMessageDialog(null, sentences[language-1][2]);
 				}
 			}
-			if(count == occurency) // si toutes les victimes graves sont retrouvées
-				break;
 			
 			robot.avancer();
 			
-			// Arrêt si le robot est revenu au point de départ
-			if(robot.getLigne() == 0 && robot.getColonne() == 0) {
-				break;
-			}
-			// Sinon, gestion du retour en serpentin
-			if (robot.getLigne() == 9 || robot.getLigne() == 0) {
-				changeLineReturn(robot);
-		    }
 		}
 	
 		// Affichage du tableau récapitulatif des victimes et de leurs gravités
