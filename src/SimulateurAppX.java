@@ -116,9 +116,11 @@ public class SimulateurAppX {
 		int higherGravity = max(victimsFoundGravity);
 	
 		// Le robot fait demi-tour pour revenir au point de départ
+		if(robot.getLigne() == 9 || robot.getLigne() == 0 && robot.getColonne() != 9) {
+			robot.avancer();
+		}
 		robot.tournerDroite();
 		robot.tournerDroite();
-	
 		// On compte combien de victimes ont cette gravité maximale
 		int occurency = countOccurency(victimsFoundGravity, higherGravity);
 		int count = 0; // compteur de victimes retrouvées avec cette gravité
