@@ -64,7 +64,7 @@ public class SimulateurAppX {
 		do {
 			System.out.printf("%s \n", sentences[language-1][1]); // message dans la langue choisie
 			victimNumber = sc.nextInt();
-		} while(victimNumber<=0 || victimNumber>6); // bornes de sécurité (entre 1 et 6 victimes)
+		} while(victimNumber<=0 || victimNumber>10); // bornes de sécurité (entre 1 et 6 victimes)
 	
 		// Création de l’environnement de 10x10 cases
 		Terrain terrain = Environnement.creerEnvironnement(10, 10);
@@ -83,27 +83,31 @@ public class SimulateurAppX {
 		List<Integer> victimsFoundGravity = new ArrayList<>();
 		
 		int victimFound = 0;   // compteur de victimes découvertes
-		int fieldExplore = 0;  // compteur de cases explorées
+		int fieldExplore = 1;  // compteur de cases explorées
 		
 		// Boucle principale : exploration du terrain
 		while((victimFound != victimNumber) && !(robot.getColonne() == 9 && (robot.getLigne() == 0))) {
 			// Gestion du déplacement en mode "serpentin" (aller-retour sur les lignes)
-			if((robot.getLigne() == 9 || robot.getLigne() == 0) && !(robot.getColonne() == 0 && robot.getLigne() == 0) && !(robot.getColonne() == 9 && robot.getLigne() == 0)) {
+			if((robot.getLigne() == 9 || robot.getLigne() == 0) && 
+				!(robot.getColonne() == 0 && robot.getLigne() == 0) && 
+				!(robot.getColonne() == 9 && robot.getLigne() == 0)
+			) {
 		        victimFound += changeLine(robot, victimsFoundGravity);
 		        fieldExplore++;
 		    
 			}
-			// Le robot avance et vérifie s’il trouve une victime
-			victimFound += avancerEtVerifier(robot, victimsFoundGravity);
-			fieldExplore++; // on incrémente le nombre de cases explorées
-			
+			// Le robot avance et vérifie s’il trouve une victime si toute les victimes n'ont pas encore été trouvé
+			if(victimFound != victimNumber) {
+				victimFound += avancerEtVerifier(robot, victimsFoundGravity);
+				fieldExplore++; // on incrémente le nombre de cases explorées
+			}
 		}
 		
 		// Une fois toutes les victimes trouvées, on identifie la gravité la plus élevée
 		int higherGravity = max(victimsFoundGravity);
 	
 		// Le robot fait demi-tour pour revenir au point de départ
-		if(robot.getLigne() == 9 || robot.getLigne() == 0 && robot.getColonne() != 9) {
+		if((robot.getLigne() == 9 && robot.getDirection() == "nord") || (robot.getLigne() == 0 && robot.getDirection() == "sud")) {
 			robot.avancer();
 		}
 		robot.tournerDroite();
@@ -111,33 +115,23 @@ public class SimulateurAppX {
 		// On compte combien de victimes ont cette gravité maximale
 		int occurency = countOccurency(victimsFoundGravity, higherGravity);
 		int count = 0; // compteur de victimes retrouvées avec cette gravité
-	
+
+		// Vérification initiale (au cas où on démarre déjà sur une victime grave)
+		count += verifierVictimeGrave(robot, higherGravity, sentences, language);
+
 		// Parcours de retour du robot jusqu’à avoir revu toutes les victimes les plus graves
-		while((count != occurency) && !(robot.getLigne() == 0 && robot.getColonne() == 0)) {
-			// Sinon, gestion du retour en serpentin
-			if (robot.getLigne() == 9 || robot.getLigne() == 0) {
-				changeLineReturn(robot);
-				if(robot.isSurVictime()) {
-					if(robot.detecterGravite() == higherGravity) {
-						count++;
-						// Message d’encouragement dans la langue choisie
-						System.out.printf("%s !\n", sentences[language-1][2]);
-						JOptionPane.showMessageDialog(null, sentences[language-1][2]);
-					}
-				}
+		while (count != occurency && !(robot.getLigne() == 0 && robot.getColonne() == 0)) {
+		    robot.avancer();
+		    count += verifierVictimeGrave(robot, higherGravity, sentences, language);
+
+		    // Gestion du retour en serpentin si on atteint une extrémité
+		    if ((robot.getLigne() == 9 || robot.getLigne() == 0) 
+		        && !(robot.getColonne() == 0 && robot.getLigne() == 0)) {
+		        changeLineReturn(robot);
+		        count += verifierVictimeGrave(robot, higherGravity, sentences, language);
 		    }
-			if(robot.isSurVictime()) {
-				if(robot.detecterGravite() == higherGravity) {
-					count++;
-					// Message d’encouragement dans la langue choisie
-					System.out.printf("%s !\n", sentences[language-1][2]);
-					JOptionPane.showMessageDialog(null, sentences[language-1][2]);
-				}
-			}
-			
-			robot.avancer();
-			
 		}
+
 	
 		// Affichage du tableau récapitulatif des victimes et de leurs gravités
 		if(victimsFoundGravity.size() >0) {
@@ -263,6 +257,15 @@ public class SimulateurAppX {
 			}
 		}
 		return occurency;
+	}
+	
+	private static int verifierVictimeGrave(Robot robot, int higherGravity, String[][] sentences, int language) {
+	    if(robot.isSurVictime() && robot.detecterGravite() == higherGravity) {
+	        // Message d’encouragement dans la langue choisie
+	        JOptionPane.showMessageDialog(null, sentences[language-1][2]);
+	        return 1;
+	    }
+	    return 0;
 	}
 
 }
