@@ -1,4 +1,3 @@
----
 # 📘 Simulateur de Robot d’Intervention
 
 ## 🎯 Contexte du projet
