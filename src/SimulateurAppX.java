@@ -21,7 +21,8 @@ public class SimulateurAppX {
 		        "Courage !",
 		        "La moyenne de gravité est : ",
 		        "Pourcentage de terrain inexploré : ",
-		        "La gravité de la victime trouvée est : "
+		        "La gravité de la victime trouvée est : ",
+		        "La distance parcourue est "
 		    },
 		    { // Anglais
 		        "Choose language",
@@ -29,7 +30,8 @@ public class SimulateurAppX {
 		        "Be strong!",
 		        "The average gravity is: ",
 		        "Percentage of unexplored area: ",
-		        "The gravity of the found victim is: "
+		        "The gravity of the found victim is: ",
+		        "The travelled distance is "
 		    },
 		    { // Espagnol
 		        "Elige idioma",
@@ -37,7 +39,8 @@ public class SimulateurAppX {
 		        "¡Sé fuerte!",
 		        "El promedio de gravedad es: ",
 		        "Porcentaje de terreno inexplorado: ",
-		        "La gravedad de la víctima encontrada es: "
+		        "La gravedad de la víctima encontrada es: ",
+		        "La distancia recorrida es "
 		    },
 		    { // Allemand
 		        "Sprache wählen",
@@ -45,7 +48,8 @@ public class SimulateurAppX {
 		        "Sei stark!",
 		        "Der Durchschnitt der Schwere ist: ",
 		        "Prozentsatz des unerforschten Gebiets: ",
-		        "Die Schwere des gefundenen Opfers ist: "
+		        "Die Schwere des gefundenen Opfers ist: ",
+		        "Die zurückgelegte Distanz ist "
 		    }
 		};
 
@@ -168,57 +172,112 @@ public class SimulateurAppX {
 
 	    // Place la victime
 	    map[victimLine][width - 2] = 'V';
-		// Affichage de la map
-		display2DTablePrettier(map);
 		
-		
-		int rotation = 0;
+	    float distance = 0;
 
 		while (!(robot.getLigne() == 0 && robot.getColonne() == 0)) {
-		
 		    int ligne = robot.getLigne();
 		    int colonne = robot.getColonne();
-		    String direction = robot.getDirection();
 		
-		    boolean nordPossible = direction.equals("nord")
-		        && (ligne != 0)
+		    boolean nordPossible = (ligne != 0)
 		        && ((map[ligne - 1][colonne] == '+')
 		         || (map[ligne - 1][colonne] == 'P'));
 		
-		    boolean estPossible = direction.equals("est")
-		        && (colonne != 9)
+		    boolean estPossible = (colonne != 9)
 		        && ((map[ligne][colonne + 1] == '+')
 		         || (map[ligne][colonne + 1] == 'P'));
 		
-		    boolean ouestPossible = direction.equals("ouest")
-		        && (colonne != 0)
+		    boolean ouestPossible = (colonne != 0)
 		        && ((map[ligne][colonne - 1] == '+')
 		         || (map[ligne][colonne - 1] == 'P'));
 		
-		    boolean sudPossible = direction.equals("sud")
-		        && (ligne != 9)
+		    boolean sudPossible = (ligne != 9)
 		        && ((map[ligne + 1][colonne]== '+')
 		         || (map[ligne + 1][colonne] == 'P'));
-		
-		    if (nordPossible || estPossible || ouestPossible || sudPossible) {
+		    if(nordPossible) {
+		    	distance += 0.25*orientRobot(robot, "nord");
 		    	map[robot.getLigne()][robot.getColonne()] = '-';
-		        robot.avancer();
-		    } else {
-		        robot.tournerDroite();
-		        
+		    	robot.avancer();
+		    	distance += 1;
+		    }else if(estPossible) {
+		    	distance += 0.25*orientRobot(robot, "est");
+		    	map[robot.getLigne()][robot.getColonne()] = '-';
+		    	robot.avancer();
+		    	distance += 1;
+		    }else if(ouestPossible) {
+		    	distance += 0.25*orientRobot(robot, "ouest");
+		    	map[robot.getLigne()][robot.getColonne()] = '-';
+		    	robot.avancer();
+		    	distance += 1;
+		    }else if(sudPossible) {
+		    	distance += 0.25*orientRobot(robot, "sud");
+		    	map[robot.getLigne()][robot.getColonne()] = '-';
+		    	robot.avancer();
+		    	distance += 1;
 		    }
 		}
 
 		for(int i=0; i<10; i++) {
 			for(int j=0; j<10; j++) {
 				if(map[i][j] == '-') {
-					map[i][j] = '+';
+					if(j%2 == 1) {
+						map[i][j] = 'P';
+					}else {
+						map[i][j] = '+';
+					}
 				}
 			}
 		}
 		map[victimLine][width - 2] = 'V';
+		// Affichage de la map
+		display2DTablePrettier(map);
 		System.out.println(sentences[language-1][5] + victimGravity);
+		System.out.println(sentences[language-1][6] + distance);
 		sc.close(); // fermeture du scanner
+	}
+
+	private static int orientRobot(Robot robot, String dir) {
+	    String currDir = robot.getDirection();
+
+	    // Si déjà orienté correctement
+	    if (dir.equals(currDir)) {
+	        return 0;
+	    }
+
+	    // Ordre des directions dans le sens horaire
+	    String[] directions = {"nord", "est", "sud", "ouest"};
+
+	    // Trouver les index des directions actuelle et cible
+	    int currIndex = -1;
+	    int targetIndex = -1;
+
+	    for (int i = 0; i < directions.length; i++) {
+	        if (directions[i].equals(currDir)) currIndex = i;
+	        if (directions[i].equals(dir)) targetIndex = i;
+	    }
+
+	    if (currIndex == -1 || targetIndex == -1) {
+	        return 0;
+	    }
+
+	    // Calcul du nombre de pas à tourner dans chaque sens
+	    int diff = (targetIndex - currIndex + 4) % 4;  // 0..3
+	    // diff = 1 -> tournerDroite une fois
+	    // diff = 2 -> demi-tour
+	    // diff = 3 -> tournerGauche une fois
+
+	    if (diff == 1) {
+	        robot.tournerDroite();
+	        return 1;
+	    } else if (diff == 2) {
+	        robot.tournerDroite();
+	        robot.tournerDroite();
+	        return 2;
+	    } else if (diff == 3) {
+	        robot.tournerGauche();
+	        return 1;
+	    }
+	    return 0;
 	}
 
 	// Tourner le robot à gauche ou droite selon la direction actuelle
