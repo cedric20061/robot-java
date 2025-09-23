@@ -20,252 +20,274 @@ public class SimulateurAppX {
 		        "Combien de victimes dois-je trouver ?",
 		        "Courage !",
 		        "La moyenne de gravité est : ",
-		        "Pourcentage de terrain inexploré : "
+		        "Pourcentage de terrain inexploré : ",
+		        "La gravité de la victime trouvée est : "
 		    },
 		    { // Anglais
 		        "Choose language",
 		        "How many victims have I to save?",
 		        "Be strong!",
 		        "The average gravity is: ",
-		        "Percentage of unexplored area: "
+		        "Percentage of unexplored area: ",
+		        "The gravity of the found victim is: "
 		    },
 		    { // Espagnol
 		        "Elige idioma",
 		        "¿Cuántas víctimas tengo que salvar?",
 		        "¡Sé fuerte!",
 		        "El promedio de gravedad es: ",
-		        "Porcentaje de terreno inexplorado: "
+		        "Porcentaje de terreno inexplorado: ",
+		        "La gravedad de la víctima encontrada es: "
 		    },
 		    { // Allemand
 		        "Sprache wählen",
 		        "Wie viele Opfer muss ich retten?",
 		        "Sei stark!",
 		        "Der Durchschnitt der Schwere ist: ",
-		        "Prozentsatz des unerforschten Gebiets: "
+		        "Prozentsatz des unerforschten Gebiets: ",
+		        "Die Schwere des gefundenen Opfers ist: "
 		    }
 		};
+
 	
 		// Scanner pour lire les saisies clavier de l’utilisateur
 		Scanner sc = new Scanner(System.in);
-	
+		
 		// Affichage du menu de sélection de langue
 		System.out.println("═══════════Language selection═══════════");
 		System.out.println("1- Francais\n2- English\n3- Spanish\n4- Allemand\n");
-	
+		
 		int language = 2; // valeur par défaut = anglais
 		// Boucle pour forcer l’utilisateur à choisir une langue valide (1 à 4)
 		do {
 			System.out.printf("%s \n", sentences[language-1][0]); // phrase "Choisir la langue" (dans la langue courante)
 			language = sc.nextInt(); // saisie de l’utilisateur
 		} while(language<=0 || language>4);
-	
-		// Saisie du nombre de victimes à rechercher
-		int victimNumber = 0;
-		do {
-			System.out.printf("%s \n", sentences[language-1][1]); // message dans la langue choisie
-			victimNumber = sc.nextInt();
-		} while(victimNumber<=0 || victimNumber>10); // bornes de sécurité (entre 1 et 6 victimes)
-	
-		// Création de l’environnement de 10x10 cases
-		Terrain terrain = Environnement.creerEnvironnement(10, 10);
-	
-		// Création du robot, initialisé à la position (0,0) et orienté vers le sud
-		Robot robot = new Robot(0, 0, "sud");
-	
-		// Ajout du robot et du nombre de victimes à chercher dans le terrain
-		terrain.ajouterRobot(robot);
-		terrain.ajouterNombreDeVictimes(victimNumber);
 		
-		// Mise à jour de l’interface graphique pour afficher le terrain et le robot
-		terrain.updateIHM();
+		// création de l'environnement et récupération du terrain 
+		Terrain t = Environnement.creerEnvironnement(10,10); 
+		   
+		// creation du robot 
+		Robot robot = new Robot(0, 0, "sud"); 
+		   
+		// ajout du robot sur le terrain 
+		t.ajouterRobot(robot);  
+		   
+		//ajouter tous les murs avec une porte à une position aléatoire 
+		t.ajouterTousLesMurs(); 
 		
-		// Liste pour stocker les gravités des victimes découvertes
-		List<Integer> victimsFoundGravity = new ArrayList<>();
+		//ajouter tous les murs avec deux portes à des positions aléatoires 
+		//t.ajouterTousLesMursDeuxPortes(); 
+		   
+		//ajouter une victime à la colonne 9 aléatoirement 
+		t.ajouterVictimePositionAleatoireColonne9(); 
 		
-		int victimFound = 0;   // compteur de victimes découvertes
-		int fieldExplore = 1;  // compteur de cases explorées
+		//met à jour les composants graphiques 
+		t.updateIHM();
 		
-		// Boucle principale : exploration du terrain
-		while((victimFound != victimNumber) && !(robot.getColonne() == 9 && (robot.getLigne() == 0))) {
-			// Gestion du déplacement en mode "serpentin" (aller-retour sur les lignes)
-			if((robot.getLigne() == 9 || robot.getLigne() == 0) && 
-				!(robot.getColonne() == 0 && robot.getLigne() == 0) && 
-				!(robot.getColonne() == 9 && robot.getLigne() == 0)
-			) {
-		        victimFound += changeLine(robot, victimsFoundGravity);
-		        fieldExplore++;
-		    
-			}
-			// Le robot avance et vérifie s’il trouve une victime si toute les victimes n'ont pas encore été trouvé
-			if(victimFound != victimNumber) {
-				victimFound += avancerEtVerifier(robot, victimsFoundGravity);
-				fieldExplore++; // on incrémente le nombre de cases explorées
+		char[][] map = new char[10][10];
+		for(int i=0; i<10; i++) {
+			for(int j=0; j<10; j++) {
+				map[i][j] = (j % 2 == 1) ? 'O' : ' ';
 			}
 		}
-		
-		// Une fois toutes les victimes trouvées, on identifie la gravité la plus élevée
-		int higherGravity = max(victimsFoundGravity);
-	
-		// Le robot fait demi-tour pour revenir au point de départ
-		if((robot.getLigne() == 9 && robot.getDirection() == "nord") || (robot.getLigne() == 0 && robot.getDirection() == "sud")) {
-			robot.avancer();
+		int sens = 0;
+		while(robot.getColonne() != 8) {
+			if(robot.getDirection() == "nord" || robot.getDirection() == "sud") {
+				orientRobotForVerticalMove(robot);
+				
+				if(!robot.isObstacleDevant())  {
+					map[robot.getLigne()][robot.getColonne()+1] = 'P';
+					robot.avancer();
+					robot.avancer();
+					int line = 0;
+					if(robot.getLigne() >= 5) {
+						robot.tournerDroite();
+						line = 9;
+						sens  = 1;
+					}else {
+						robot.tournerGauche();
+						sens = 0;
+					}
+					while(robot.getLigne() != line) {
+						robot.avancer();
+					}
+					robot.tournerDroite();
+					robot.tournerDroite();
+				}
+			}else {
+				if(sens == 0) {
+					robot.tournerDroite();
+				} else {
+					robot.tournerGauche();
+				}
+				robot.avancer();
+			}
+			
 		}
-		robot.tournerDroite();
-		robot.tournerDroite();
-		// On compte combien de victimes ont cette gravité maximale
-		int occurency = countOccurency(victimsFoundGravity, higherGravity);
-		int count = 0; // compteur de victimes retrouvées avec cette gravité
+		
+		int victimFound = 0;
+		int victimLine = 0;
+		int victimGravity = 0;
+		while (victimFound != 1) {
+			if(robot.isSurVictime()) {
+				victimFound++;
+				victimGravity = robot.detecterGravite();
+				victimLine = robot.getLigne();
+			}
+			if(victimFound != 1) {
+				robot.avancer();
+			}
+		}
+		// Finir de construire la map à partir des portes
+		int width = map[0].length;
 
-		// Vérification initiale (au cas où on démarre déjà sur une victime grave)
-		count += verifierVictimeGrave(robot, higherGravity, sentences, language);
+	    for (int col = 0; col < width - 1; col += 2) {
+	        int leftDoorLine  = 0;
+	        int rightDoorLine = victimLine;
 
-		// Parcours de retour du robot jusqu’à avoir revu toutes les victimes les plus graves
-		while (count != occurency && !(robot.getLigne() == 0 && robot.getColonne() == 0)) {
-		    robot.avancer();
-		    count += verifierVictimeGrave(robot, higherGravity, sentences, language);
+	        // Cherche la porte de gauche si elle existe
+	        if (col - 1 >= 0) {
+	            leftDoorLine = findFirstDoorLine(map, col - 1, 0);
+	        }
 
-		    // Gestion du retour en serpentin si on atteint une extrémité
-		    if ((robot.getLigne() == 9 || robot.getLigne() == 0) 
-		        && !(robot.getColonne() == 0 && robot.getLigne() == 0)) {
-		        changeLineReturn(robot);
-		        count += verifierVictimeGrave(robot, higherGravity, sentences, language);
+	        // Cherche la porte de droite si elle existe
+	        if (col + 1 <= width - 2) {
+	            rightDoorLine = findFirstDoorLine(map, col + 1, victimLine);
+	        }
+
+	        // Détermine les bornes min/max
+	        int minLine = leftDoorLine>rightDoorLine ? rightDoorLine : leftDoorLine; 
+	        int maxLine = leftDoorLine<rightDoorLine ? rightDoorLine : leftDoorLine;
+
+	        // Remplit la colonne courante avec des '+'
+	        for (int row = minLine; row <= maxLine; row++) {
+	            map[row][col] = '+';
+	        }
+	    }
+
+	    // Place la victime
+	    map[victimLine][width - 2] = 'V';
+		// Affichage de la map
+		display2DTablePrettier(map);
+		
+		
+		int rotation = 0;
+
+		while (!(robot.getLigne() == 0 && robot.getColonne() == 0)) {
+		
+		    int ligne = robot.getLigne();
+		    int colonne = robot.getColonne();
+		    String direction = robot.getDirection();
+		
+		    boolean nordPossible = direction.equals("nord")
+		        && (ligne != 0)
+		        && ((map[ligne - 1][colonne] == '+')
+		         || (map[ligne - 1][colonne] == 'P'));
+		
+		    boolean estPossible = direction.equals("est")
+		        && (colonne != 9)
+		        && ((map[ligne][colonne + 1] == '+')
+		         || (map[ligne][colonne + 1] == 'P'));
+		
+		    boolean ouestPossible = direction.equals("ouest")
+		        && (colonne != 0)
+		        && ((map[ligne][colonne - 1] == '+')
+		         || (map[ligne][colonne - 1] == 'P'));
+		
+		    boolean sudPossible = direction.equals("sud")
+		        && (ligne != 9)
+		        && ((map[ligne + 1][colonne]== '+')
+		         || (map[ligne + 1][colonne] == 'P'));
+		
+		    if (nordPossible || estPossible || ouestPossible || sudPossible) {
+		    	map[robot.getLigne()][robot.getColonne()] = '-';
+		        robot.avancer();
+		    } else {
+		        robot.tournerDroite();
+		        
 		    }
 		}
 
-	
-		// Affichage du tableau récapitulatif des victimes et de leurs gravités
-		if(victimsFoundGravity.size() >0) {
-			System.out.println("═════════════════ Victims List ═════════════════");
-			System.out.println("╔════════════╦═════════════════╗");
-			System.out.printf ("║ %-10s ║ %-14s  ║%n", "Victims", "Gravity");
-			System.out.println("╠════════════╬═════════════════╣");
-			
-			int gravityTotal = 0;
-			for (int i = 0; i < victimsFoundGravity.size(); i++) {
-			    System.out.printf("║ %-10s ║  %14d ║%n", "Victim " + (i + 1), victimsFoundGravity.get(i));
-			    gravityTotal += victimsFoundGravity.get(i);
+		for(int i=0; i<10; i++) {
+			for(int j=0; j<10; j++) {
+				if(map[i][j] == '-') {
+					map[i][j] = '+';
+				}
 			}
-	
-			System.out.println("╚════════════╩═════════════════╝");
-	
-			// Calcul de la gravité moyenne
-			float gravityMoy = (float) gravityTotal/victimsFoundGravity.size();
-			System.out.printf("%s %f\n",sentences[language-1][3], gravityMoy);
-	
-			// Affichage du pourcentage de terrain non exploré
-			System.out.printf("%s %d%%", sentences[language-1][4], 100-fieldExplore);
-		}else {
-			// Aucun victime trouvée
-			System.out.println("No victim found");
 		}
+		map[victimLine][width - 2] = 'V';
+		System.out.println(sentences[language-1][5] + victimGravity);
 		sc.close(); // fermeture du scanner
 	}
 
-	/**
-	 * Permet de changer de ligne lorsque le robot atteint le haut ou le bas du terrain.
-	 * Le robot avance d'une case sur la colonne voisine et se réoriente
-	 * pour continuer son exploration en serpentin.
-	 *
-	 * @param robot le robot qui se déplace
-	 * @param victimsFoundGravity la liste des gravités des victimes trouvées
-	 * @return le nombre de victimes trouvées pendant ce changement de ligne
-	 */
-	private static int changeLine(Robot robot, List<Integer> victimsFoundGravity) {
-	    int ans = 0;
-	    if (robot.getLigne() == 9) {
-	        robot.tournerGauche();
-	        ans += avancerEtVerifier(robot, victimsFoundGravity);
-	        robot.tournerGauche();
-	    } else {
+	// Tourner le robot à gauche ou droite selon la direction actuelle
+	private static void orientRobotForVerticalMove(Robot robot) {
+	    String dir = robot.getDirection();
+	    if (dir.equals("nord")) {
 	        robot.tournerDroite();
-	        ans += avancerEtVerifier(robot, victimsFoundGravity);
-	        robot.tournerDroite();
-	    }
-	    return ans;
-	}
-
-	/**
-	 * Fait changer le robot de ligne lors de son parcours de retour.
-	 * Contrairement à {@code changeLine}, cette méthode ne vérifie pas la présence
-	 * de victimes mais ajuste seulement la position et l'orientation du robot
-	 * pour continuer le trajet inverse en serpentin.
-	 *
-	 * @param robot le robot qui se déplace
-	 */
-	private static void changeLineReturn(Robot robot) {
-	    if (robot.getLigne() == 9) {
-	    	robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerDroite();
-	        
-	    } else {
-	    	robot.tournerGauche();
-	        robot.avancer();
+	    } else if (dir.equals("sud")) {
 	        robot.tournerGauche();
 	    }
 	}
-
-	/**
-	 * Recherche la valeur maximale dans une liste d'entiers.
-	 * Utilisée ici pour déterminer la gravité la plus forte
-	 * parmi les victimes découvertes par le robot.
-	 *
-	 * @param victimsFoundGravity la liste des gravités enregistrées
-	 * @return la valeur maximale trouvée dans la liste
-	 */
-	private static int max(List<Integer> victimsFoundGravity) {
-		int max=0;
-		for(int i=0; i<victimsFoundGravity.size(); i++) {
-			if(victimsFoundGravity.get(i)>max) {
-				max = victimsFoundGravity.get(i);
-			}
-		}
-		return max;
-	}
-
-	/**
-	 * Fait avancer le robot d'une case puis vérifie s'il se trouve
-	 * sur une victime. Si c'est le cas, la gravité de la victime est ajoutée
-	 * à la liste des gravités.
-	 *
-	 * @param robot le robot qui avance
-	 * @param victimsFoundGravity la liste des gravités des victimes trouvées
-	 * @return 1 si une victime est trouvée, 0 sinon
-	 */
-	private static int avancerEtVerifier(Robot robot, List<Integer> victimsFoundGravity) {
-	    robot.avancer();
-	    if (robot.isSurVictime()) {
-	        victimsFoundGravity.add(robot.detecterGravite());
-	        return 1;
+	// Recherche la première ligne qui contient un 'P' dans une colonne donnée
+	private static int findFirstDoorLine(char[][] map, int col, int defaultLine) {
+	    for (int row = 0; row < map.length; row++) {
+	        if (map[row][col] == 'P') {
+	            return row;
+	        }
 	    }
-	    return 0;
+	    return defaultLine;
 	}
+	public static void display2DTable(char[][] tab) {
+	    int rows = tab.length;
+	    int cols = tab[0].length;
 
-	/**
-	 * Compte le nombre de fois qu'une valeur donnée apparaît dans une liste.
-	 * Utilisé ici pour savoir combien de victimes possèdent une gravité donnée.
-	 *
-	 * @param list la liste d'entiers à analyser
-	 * @param num la valeur à rechercher
-	 * @return le nombre d'occurrences de la valeur {@code num} dans la liste
-	 */
-	private static int countOccurency(List<Integer> list, int num) {
-		int occurency=0;
-		for(int i=0; i<list.size(); i++) {
-			if(list.get(i) == num) {
-				occurency++;
-			}
-		}
-		return occurency;
-	}
-	
-	private static int verifierVictimeGrave(Robot robot, int higherGravity, String[][] sentences, int language) {
-	    if(robot.isSurVictime() && robot.detecterGravite() == higherGravity) {
-	        // Message d’encouragement dans la langue choisie
-	        JOptionPane.showMessageDialog(null, sentences[language-1][2]);
-	        return 1;
+	    // Construire une ligne horizontale (bord supérieur/inférieur)
+	    String horizontal = "+";
+	    for (int j = 0; j < cols; j++) {
+	        horizontal += "---+";
 	    }
-	    return 0;
-	}
 
+	    // Affichage du tableau
+	    for (int i = 0; i < rows; i++) {
+	        System.out.println(horizontal); // Ligne du dessus
+	        for (int j = 0; j < cols; j++) {
+	            System.out.print("| " + tab[i][j] + " ");
+	        }
+	        System.out.println("|");       // Bord droit
+	    }
+	    System.out.println(horizontal);     // Dernière ligne
+	}
+	public static void display2DTablePrettier(char[][] tab) {
+	    int rows = tab.length;
+	    int cols = tab[0].length;
+
+	    // Bordures
+	    String top    = buildLine("╔", "╦", "╗", cols, rows);
+	    String middle = buildLine("╠", "╬", "╣", cols, rows);
+	    String bottom = buildLine("╚", "╩", "╝", cols, rows);
+
+	    // Affichage du tableau
+	    System.out.println(top); // Ligne du haut
+	    for (int i = 0; i < rows; i++) {
+	        System.out.print("║");
+	        for (int j = 0; j < cols; j++) {
+	            System.out.print(" " + tab[i][j] + " ║");
+	        }
+	        System.out.println();
+	        if (i < rows - 1) System.out.println(middle); // Ligne intermédiaire
+	    }
+	    System.out.println(bottom); // Ligne du bas
+	}
+	// Fonction simple pour construire une ligne horizontale
+    public static String buildLine(String left, String mid, String right, int cols, int row) {
+        String line = left;
+        for (int j = 0; j < cols; j++) {
+            line += "═══";
+            if (j < cols - 1) line += mid;
+        }
+        line += right;
+        return line;
+    }
 }
