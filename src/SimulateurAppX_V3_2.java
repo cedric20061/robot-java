@@ -69,6 +69,9 @@ public class SimulateurAppX_V3_2 {
 
 			if(robot.isSurVictime()) {
 				victimGravity = robot.detecterGravite();
+				victimLine   = robot.getLigne();
+				victimCol = robot.getColonne();
+				victimState  = robot.getEtatVictime();
 			}
 			//Exploration de la pièce pour détecter la victime
 			while ((victimGravity == 0) && !(robot.getColonne() == 9 && robot.getLigne() == 2) && !(robot.getColonne() == 9 && robot.getLigne() == 9)) {
@@ -90,7 +93,7 @@ public class SimulateurAppX_V3_2 {
 							victimState  = robot.getEtatVictime();
 						}
 						robot.tournerGauche();
-					} else {
+					} else if(robot.getLigne() == 0 || robot.getLigne() == 7) {
 						robot.tournerDroite();
 						robot.avancer();
 						if (robot.isSurVictime()) {
@@ -120,19 +123,18 @@ public class SimulateurAppX_V3_2 {
 
 				int rLine = robot.getLigne();
 				int rCol  = robot.getColonne();
-				String dir = robot.getDirection();
 
 				// On essaye d'abord de réduire la différence en LIGNE
-				if (rLine < gateLine && !"sud".equals(dir)) {
+				if (rLine < gateLine) {
 					orienterVers(robot, "sud");
-				} else if (rLine > gateLine && !"nord".equals(dir)) {
+				} else if (rLine > gateLine) {
 					orienterVers(robot, "nord");
-				} else if (rCol < gateCol && !"est".equals(dir)) {
+				} else if (rCol < gateCol) {
 					orienterVers(robot, "est");
-				} else if (rCol > gateCol && !"ouest".equals(dir)) {
+				} else if (rCol > gateCol) {
 					orienterVers(robot, "ouest");
 				}
-
+				
 				// Avancer si libre
 				if (!robot.isObstacleDevant()) {
 					robot.avancer();
