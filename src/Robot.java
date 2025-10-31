@@ -8,24 +8,24 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * Classe reprÈsentant le robot
+ * Classe repr√©sentant le robot
  * 
- * @author DÈpartement TIC - ESIGELEC
+ * @author D√©partement TIC - ESIGELEC
  * @version 1.2
  */
 
 public class Robot {
 
 	/**
-	 * image qui reprÈsente le Robot
+	 * image qui repr√©sente le Robot
 	 */
 	private BufferedImage image;
 	/**
-	 * numÈro de la ligne courante du Robot (commence ‡ 0)
+	 * num√©ro de la ligne courante du Robot (commence √† 0)
 	 */
 	private int ligne;
 	/**
-	 * numÈro de la colonne courante du Robot (commence ‡ 0)
+	 * num√©ro de la colonne courante du Robot (commence √† 0)
 	 */
 	private int colonne;
 	/**
@@ -37,26 +37,37 @@ public class Robot {
 	 */
 	private Terrain terrain;
 	/**
-	 * Vitesse de dÈplacement du Robot (unitÈ : cases par seconde, ie m/s)
+	 * Vitesse de d√©placement du Robot (unit√© : cases par seconde, ie m/s)
 	 */
 	private double vitesse = 4;
 	/**
-	 * Indique si le robot est dÈtruit ou non, un robot dÈtruit ne peut plus se
-	 * dÈplacer
+	 * Indique si le robot est d√©truit ou non, un robot d√©truit ne peut plus se
+	 * d√©placer
 	 */
 	private boolean robotDetruit = false;
 	/**
-	 * Indique la couleur de tracÈ
+	 * Indique la couleur de trac√©
 	 */
 	private int trace = 0;
-
+	/**
+	 * Type de moteur du robot;
+	 */
+	private String engineType = "thermique";
+	/*
+	 * Pourcentage de la batterie dans le cas d'un moteur √©lectrique
+	 */
+	private double batteryPercent = 100;
+	/*
+	 * Nombre de chocs encaiss√© par le robot
+	 */
+	private int chocsNumber = 0;
 	/**
 	 * Constructeur du Robot
 	 * 
 	 * @param ligne
-	 *            ligne initiale du Robot (commence ‡ 0)
+	 *            ligne initiale du Robot (commence √† 0)
 	 * @param colonne
-	 *            colonne initiale du Robot (commence ‡ 0)
+	 *            colonne initiale du Robot (commence √† 0)
 	 * @param direction
 	 *            direction initiale du Robot (est, ouest, nord ou sud)
 	 */
@@ -65,8 +76,8 @@ public class Robot {
 		this.ligne = ligne;
 		this.colonne = colonne;
 		this.direction = direction;
-		// initialisation de l'attribut image ‡ partir d'un fichier de type
-		// image reprÈsentant le Robot ‡ l'Ècran
+		// initialisation de l'attribut image √† partir d'un fichier de type
+		// image repr√©sentant le Robot √† l'√©cran
 
 		try {
 			image = ImageIO.read(new File(getCheminImageRobot()));
@@ -75,22 +86,37 @@ public class Robot {
 		}
 
 	}
+	public Robot(int ligne, int colonne, String direction, String engineType) {
+		// initialisation des attributs de la classe
+		this.ligne = ligne;
+		this.colonne = colonne;
+		this.direction = direction;
+		this.engineType = engineType;
+		// initialisation de l'attribut image √† partir d'un fichier de type
+		// image repr√©sentant le Robot √† l'√©cran
 
+		try {
+			image = ImageIO.read(new File(getCheminImageRobot()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 	/**
-	 * Permet de dÈssiner le robot ‡ l'Ècran
+	 * Permet de d√©ssiner le robot √† l'√©cran
 	 * 
 	 * @param g
 	 *            objet Graphics sur lequel on dessine le robot
 	 * @param largeurCase
 	 *            largeur de la case sur laquelle on va dessiner le robot (en
-	 *            pixel). L'image sera automatiquement redimmensionnÈe.
+	 *            pixel). L'image sera automatiquement redimmensionn√©e.
 	 * @param hauteurCase
 	 *            hauteur de la case sur laquelle on va dessiner le robot (en
-	 *            pixel) L'image sera automatiquement redimmensionnÈe.
+	 *            pixel) L'image sera automatiquement redimmensionn√©e.
 	 */
 	public void dessiner(Graphics g, int largeurCase, int hauteurCase) {
 		// on convertit l'objet Graphics en Graphics2D afin de pouvoir utiliser
-		// des mÈthodes plus pratiques
+		// des m√©thodes plus pratiques
 		Graphics2D g2 = (Graphics2D) g;
 		// on trouve l'angle de rotation de l'image en s'appuyant sur la
 		// direction du Robot
@@ -102,12 +128,12 @@ public class Robot {
 		else if ("ouest".equals(direction))
 			angleRotation = 3 * Math.PI / 2;
 
-		// on fait pivoter l'image de angleRotation, le centre de rotation Ètant
+		// on fait pivoter l'image de angleRotation, le centre de rotation √©tant
 		// le centre de la case
 		g2.rotate(angleRotation, largeurCase / 2, hauteurCase / 2);
-		// on dessine l'image pivotÈe sur la case dont on connait le Graphics
+		// on dessine l'image pivot√©e sur la case dont on connait le Graphics
 		g2.drawImage(image, 0, 0, largeurCase, hauteurCase, null);
-		// on remet la rotation ‡ 0
+		// on remet la rotation √† 0
 		g2.rotate(-angleRotation, largeurCase / 2, hauteurCase / 2);
 
 	}
@@ -115,114 +141,120 @@ public class Robot {
 	/**
 	 * permet d'avancer le robot droit devant lui
 	 * 
-	 * @return 1 si le robot a pu avancer, -1 si le robot n'a pas pu avancer ‡
+	 * @return 1 si le robot a pu avancer, -1 si le robot n'a pas pu avancer √†
 	 *         cause d'un obstacle ou des limites du terrain, -2 si le robot n'a
-	 *         pas pu avancer car il est dÈtruit, -3 si le robot n'a plus de
+	 *         pas pu avancer car il est d√©truit, -3 si le robot n'a plus de
 	 *         batterie
 	 */
 	public int avancer() {
 		int retour = 1;
 
-		// si le robot est dÈtruit on ne peut pas avancer
+		// si le robot est d√©truit on ne peut pas avancer
 		if (robotDetruit)
 			retour = -2;
 
 		else
-		// si on avance alors qu'il y a un obstacle devant alors on dÈtruit le
-		// robot
-		if (isObstacleDevant()) {
+			// si on avance alors qu'il y a un obstacle devant alors on d√©truit le
+			// robot
+			if (isObstacleDevant()) {
 
-			detruireRobot();
-			retour = -1;
-		} else {
-			// on peut faire avancer le robot suivant sa direction
-			if ("nord".equals(direction)) {
-				ligne--;
-
-			} else if ("sud".equals(direction)) {
-				ligne++;
-
-			} else if ("ouest".equals(direction)) {
-				colonne--;
-
-			} else if ("est".equals(direction)) {
-				colonne++;
-
-			} else
+				detruireRobot();
 				retour = -1;
+			} else {
+				// on peut faire avancer le robot suivant sa direction
+				if ("nord".equals(direction)) {
+					ligne--;
 
-			// on mÈmorise que la case est maintenant visitÈe
-			if (trace == 1) {
-				terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
-			
-				terrain.getGrille()[ligne][colonne].setVisitee(true);
+				} else if ("sud".equals(direction)) {
+					ligne++;
+
+				} else if ("ouest".equals(direction)) {
+					colonne--;
+
+				} else if ("est".equals(direction)) {
+					colonne++;
+
+				} else
+					retour = -1;
+
+				// on m√©morise que la case est maintenant visit√©e
+				if (trace == 1) {
+					terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
+
+					terrain.getGrille()[ligne][colonne].setVisitee(true);
+				}
+				if (trace == 2) {
+					terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
+
+					terrain.getGrille()[ligne][colonne].setVisitee(true);
+				}
+
+				// on redessine le terrain
+				terrain.repaint();
+
+				// on effectue une petite pause fonction de la vitesse du robot
+				try {
+					Thread.sleep((int) (1000 / vitesse));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
 			}
-			if (trace == 2) {
-				terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
-				
-				terrain.getGrille()[ligne][colonne].setVisitee(true);
-			}
 
-			// on redessine le terrain
-			terrain.repaint();
-
-			// on effectue une petite pause fonction de la vitesse du robot
-			try {
-				Thread.sleep((int) (1000 / vitesse));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
+		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+		if("electrique".equals(engineType)) {
+			batteryPercent -= 1;
 		}
 		return retour;
+
 	}
 
 	/**
 	 * Permet de faire reculer le robot
 	 * 
-	 * @return 1 si le robot a pu reculer, -1 si le robot n'a pas pu reculer ‡
+	 * @return 1 si le robot a pu reculer, -1 si le robot n'a pas pu reculer √†
 	 *         cause d'un obstacle ou des limites du terrain, -2 si le robot n'a
-	 *         pas pu reculer car il est dÈtruit, -3 si le robot n'a plus de
+	 *         pas pu reculer car il est d√©truit, -3 si le robot n'a plus de
 	 *         batterie
 	 */
 	public int reculer() {
 		int retour = 1;
 
-		// si le robot est dÈtruit on ne peut pas avancer
+		// si le robot est d√©truit on ne peut pas avancer
 		if (robotDetruit)
 			retour = -2;
 		else
-		// si on recule alors qu'il y a un obstacle derriere alors on dÈtruit le
-		// robot
-		if (isObstacleDerriere()) {
-			detruireRobot();
-			retour = -1;
-		}
-
-		else {
-			// on peut faire reculer le robot suivant sa direction opposÈe
-			if ("sud".equals(direction)) {
-				ligne--;
-			} else if ("nord".equals(direction)) {
-				ligne++;
-			} else if ("est".equals(direction)) {
-				colonne--;
-			} else if ("ouest".equals(direction)) {
-				colonne++;
-			} else
+			// si on recule alors qu'il y a un obstacle derriere alors on d√©truit le
+			// robot
+			if (isObstacleDerriere()) {
+				detruireRobot();
 				retour = -1;
+			}
 
-			if (trace == 1) {
-				terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
-			
-				terrain.getGrille()[ligne][colonne].setVisitee(true);
+			else {
+				// on peut faire reculer le robot suivant sa direction oppos√©e
+				if ("sud".equals(direction)) {
+					ligne--;
+				} else if ("nord".equals(direction)) {
+					ligne++;
+				} else if ("est".equals(direction)) {
+					colonne--;
+				} else if ("ouest".equals(direction)) {
+					colonne++;
+				} else
+					retour = -1;
+
+				if (trace == 1) {
+					terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
+
+					terrain.getGrille()[ligne][colonne].setVisitee(true);
+				}
+				if (trace == 2) {
+					terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
+
+					terrain.getGrille()[ligne][colonne].setVisitee(true);
+				}
 			}
-			if (trace == 2) {
-				terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
-				
-				terrain.getGrille()[ligne][colonne].setVisitee(true);
-			}
-		}
 		// on redessine le terrain
 		terrain.repaint();
 		// on effectue une petite pause fonction de la vitesse du robot
@@ -231,15 +263,19 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+		if("electrique".equals(engineType)) {
+			batteryPercent -= 1;
+		}
 		return retour;
+
 	}
 
 	/**
 	 * Permet de faire pivoter le robot sur sa droite
 	 * 
 	 * @return 1 si le robot a pu tourner correctement, -2 si le robot n'a pas
-	 *         pu tourner car il est dÈtruit, -3 si le robot n'a plus de
+	 *         pu tourner car il est d√©truit, -3 si le robot n'a plus de
 	 *         batterie
 	 */
 	public int tournerDroite() {
@@ -267,7 +303,10 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+		if("electrique".equals(engineType)) {
+			batteryPercent -= 0.5;
+		}
 		return retour;
 	}
 
@@ -275,7 +314,7 @@ public class Robot {
 	 * Permet de faire pivoter le robot sur sa droite
 	 * 
 	 * @return 1 si le robot a pu tourner correctement, -2 si le robot n'a pas
-	 *         pu tourner car il est dÈtruit, -3 si le robot n'a plus de
+	 *         pu tourner car il est d√©truit, -3 si le robot n'a plus de
 	 *         batterie
 	 */
 	public int tournerGauche() {
@@ -304,16 +343,19 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+		if("electrique".equals(engineType)) {
+			batteryPercent -= 0.5;
+		}
 		return retour;
 	}
 
 	/**
-	 * Teste la prÈsence d'un obstacle devant le robot
+	 * Teste la pr√©sence d'un obstacle devant le robot
 	 * 
-	 * @return true si un obstacle est prÈsent devant le robot (le contours du
-	 *         terrain est considÈrÈ comme un obstacle); false si aucun obstacle
-	 *         n'est prÈsent devant le robot
+	 * @return true si un obstacle est pr√©sent devant le robot (le contours du
+	 *         terrain est consid√©r√© comme un obstacle); false si aucun obstacle
+	 *         n'est pr√©sent devant le robot
 	 */
 
 	public boolean isObstacleDevant() {
@@ -337,34 +379,39 @@ public class Robot {
 				&& colonne < terrain.getNbColonnes() - 1
 				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
 			return false;
-		else
+		else {
+			// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+			if("electrique".equals(engineType)) {
+				batteryPercent -= 0.25;
+			}
 			return true;
+		}
 
 	}
 
 	/**
-	 * MÈthode qui permet de dÈtecter un obstacle devant le robot en consommant
+	 * M√©thode qui permet de d√©tecter un obstacle devant le robot en consommant
 	 * la batterie
 	 * 
-	 * @return true si un obstacle est prÈsent devant le robot (le contours du
-	 *         terrain est considÈrÈ comme un obstacle); false si aucun obstacle
-	 *         n'est prÈsent devant le robot
+	 * @return true si un obstacle est pr√©sent devant le robot (le contours du
+	 *         terrain est consid√©r√© comme un obstacle); false si aucun obstacle
+	 *         n'est pr√©sent devant le robot
 	 */
 	public boolean isObstacleDevantAvecConsommationBatterie() {
-		// TODO ‡ complÈter
+		// TODO √† compl√©ter
 		return true;
 	}
 
 	/**
-	 * Teste la prÈsence d'un obstacle ‡ l'arriËre le Robot
+	 * Teste la pr√©sence d'un obstacle √† l'arri√®re le Robot
 	 * 
-	 * @return true si un obstacle est prÈsent derriËre le robot; false si aucun
-	 *         obstacle n'est prÈsent derriËre le robot
+	 * @return true si un obstacle est pr√©sent derri√®re le robot; false si aucun
+	 *         obstacle n'est pr√©sent derri√®re le robot
 	 */
 	public boolean isObstacleDerriere() {
 
 		// en fonction de la direction du robot, on teste s'il ne sort pas des
-		// limites du terrain, et si la case derriËre lui n'est pas de type
+		// limites du terrain, et si la case derri√®re lui n'est pas de type
 		// Obstacle
 		if ("sud".equals(direction)
 				&& ligne > 0
@@ -383,40 +430,72 @@ public class Robot {
 				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
 			return false;
 
-		else
+		else {
+			// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+			if("electrique".equals(engineType)) {
+				batteryPercent -= 0.25;
+			}
 			return true;
+		}
+
 
 	}
 
 	/**
-	 * MÈthode qui permet de dÈtecter un obstacle ‡ l'arriËre du robot en
+	 * M√©thode qui permet de d√©tecter un obstacle √† l'arri√®re du robot en
 	 * consommant la batterie
 	 * 
-	 * @return true si un obstacle est prÈsent derriËre le robot (le contours du
-	 *         terrain est considÈrÈ comme un obstacle); false si aucun obstacle
-	 *         n'est prÈsent devant le robot
+	 * @return true si un obstacle est pr√©sent derri√®re le robot (le contours du
+	 *         terrain est consid√©r√© comme un obstacle); false si aucun obstacle
+	 *         n'est pr√©sent devant le robot
 	 */
 	public boolean isObstacleDerriereAvecConsommationBatterie() {
-		// TODO ‡ complÈter
+		// TODO √† compl√©ter
 		return true;
 
 	}
 
 	/**
-	 * Permet de dÈtruire le robot
+	 * Permet de d√©truire le robot
 	 */
 	public void detruireRobot() {
-		// on indique que le robot est dÈtruit
-		robotDetruit = true;
-		// on modifie son image pour voir une image de robot dÈtruit
+		// Si le robot a d√©j√† subi 4 chocs, il est d√©truit
+		if (chocsNumber >= 4) {
+			robotDetruit = true;
+			mettreAJourImage(getCheminImageRobotDetruit());
+			terrain.repaint();
+			System.out.println("Robot d√©truit !");
+			return;
+		}
+
+		// Sinon, on incr√©mente le nombre de chocs
+		chocsNumber++;
+
+		// Animation visuelle du choc (rouge + image normale)
+		for (int i = 0; i < 2; i++) {
+			String cheminImage = (i % 2 == 0) ? getCheminImageRobotMed() : getCheminImageRobot();
+			mettreAJourImage(cheminImage);
+			terrain.repaint();
+			try {
+				Thread.sleep(100); // petit d√©lai pour rendre l‚Äôeffet visible
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+
+		System.out.println("Choc re√ßu (" + chocsNumber + "/4)");
+	}
+
+	/**
+	 * Met √† jour l'image du robot depuis un chemin donn√©
+	 */
+	private void mettreAJourImage(String cheminImage) {
 		try {
-			image = ImageIO.read(new File(getCheminImageRobotDetruit()));
+			image = ImageIO.read(new File(cheminImage));
 		} catch (IOException e) {
+			System.err.println("Erreur lors du chargement de l'image : " + cheminImage);
 			e.printStackTrace();
 		}
-		// on redessine le terrain
-		terrain.repaint();
-		System.out.println("Robot DÈtruit !");
 	}
 
 	/**
@@ -435,9 +514,9 @@ public class Robot {
 	}
 
 	/**
-	 * Permet de sauver une victime, i.e. changer son Ètat
+	 * Permet de sauver une victime, i.e. changer son √©tat
 	 * 
-	 * @return 1 si la victime a ÈtÈ sauvÈe; -1 si aucune victime sur la case
+	 * @return 1 si la victime a √©t√© sauv√©e; -1 si aucune victime sur la case
 	 *         courante du robot
 	 */
 	public int sauverVictime() {
@@ -511,7 +590,7 @@ public class Robot {
 	}
 
 	/**
-	 * MÈthode permettant de modifier la couleur de tracer
+	 * M√©thode permettant de modifier la couleur de tracer
 	 * 
 	 * @param trace
 	 *            correspond au code de couleur : 1 pour le rouge, 2 pour le
@@ -531,9 +610,9 @@ public class Robot {
 	}
 
 	/**
-	 * MÈthode permettant de dÈtecter la gravitÈ de l'Ètat d'une victime.
+	 * M√©thode permettant de d√©tecter la gravit√© de l'√©tat d'une victime.
 	 * 
-	 * @return la gravitÈ de l'Ètat de la victime entre 1 et 10 s'il y a une
+	 * @return la gravit√© de l'√©tat de la victime entre 1 et 10 s'il y a une
 	 *         victime sur la case; 0 s'il n'y a pas de victime.
 	 */
 	public int detecterGravite() {
@@ -546,10 +625,10 @@ public class Robot {
 	}
 
 	/**
-	 * Permet de rÈcupÈrer l'Ètat de la victime une fois que le robot est sur la
+	 * Permet de r√©cup√©rer l'√©tat de la victime une fois que le robot est sur la
 	 * victime
 	 * 
-	 * @return l'Ètat de la victime ou un message indiquant que le robot n'a pas
+	 * @return l'√©tat de la victime ou un message indiquant que le robot n'a pas
 	 *         encore atteint la victime
 	 */
 	public String getEtatVictime() {
@@ -560,19 +639,33 @@ public class Robot {
 		} else
 			return "Le robot n'a pas encore atteint la victime";
 	}
-	
+
 	/**
 	 * @return le chemin vers l'image du robot
 	 */
 	protected String getCheminImageRobot() {
 		return "./data/robot.png";
 	}
-	
+
 	/**
-	 * @return le chemin vers l'image du robot dÈtruit
+	 * @return le chemin vers l'image du robot d√©truit
 	 */
 	protected String getCheminImageRobotDetruit() {
 		return "./data/robot_detruit.png";
 	}
-
+	protected String getCheminImageRobotMed() {
+		return "./data/robot_medical.png";
+	}
+	
+	public void compterObstacles() {
+		
+	}
+	
+	public void recharge() {
+		if(!(ligne==0 && colonne==0)) {
+			System.out.println("La charge ne peux s'effectu√© qu'en (0,0)");
+			return;
+		}
+		batteryPercent = 100;
+	}
 }
