@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-
+import java.util.ArrayList;
 /**
  * Classe représentant le robot
  * 
@@ -61,6 +61,10 @@ public class Robot {
 	 * Nombre de chocs encaissé par le robot
 	 */
 	private int chocsNumber = 0;
+	/*
+	 * Position des obtacles rencontré et nombre de rencontre
+	 */
+	private ArrayList<Integer[]> obstaclesEncountered = new ArrayList<>();
 	/**
 	 * Constructeur du Robot
 	 * 
@@ -154,13 +158,15 @@ public class Robot {
 			retour = -2;
 
 		else
-			// si on avance alors qu'il y a un obstacle devant alors on détruit le
-			// robot
-			if (isObstacleDevant()) {
+			compterObstacles(1);
+		// si on avance alors qu'il y a un obstacle devant alors on détruit le
+		// robot
+		if (isObstacleDevant()) {
 
-				detruireRobot();
-				retour = -1;
-			} else {
+			detruireRobot();
+			retour = -1;
+		} else {
+			if("thermique".equals(engineType) || ("electrique".equals(engineType) && batteryPercent >=1)){
 				// on peut faire avancer le robot suivant sa direction
 				if ("nord".equals(direction)) {
 					ligne--;
@@ -198,12 +204,15 @@ public class Robot {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-
+				// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+				if("electrique".equals(engineType)) {
+					batteryPercent -= 1;
+				}
+			}else {
+				System.out.println("Batterie trop faible pour avancer");
+				retour = -3;
 			}
 
-		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-		if("electrique".equals(engineType)) {
-			batteryPercent -= 1;
 		}
 		return retour;
 
@@ -232,28 +241,38 @@ public class Robot {
 			}
 
 			else {
-				// on peut faire reculer le robot suivant sa direction opposée
-				if ("sud".equals(direction)) {
-					ligne--;
-				} else if ("nord".equals(direction)) {
-					ligne++;
-				} else if ("est".equals(direction)) {
-					colonne--;
-				} else if ("ouest".equals(direction)) {
-					colonne++;
-				} else
-					retour = -1;
+				if("thermique".equals(engineType) || ("electrique".equals(engineType) && batteryPercent >=1)){
+					// on peut faire reculer le robot suivant sa direction opposée
+					if ("sud".equals(direction)) {
+						ligne--;
+					} else if ("nord".equals(direction)) {
+						ligne++;
+					} else if ("est".equals(direction)) {
+						colonne--;
+					} else if ("ouest".equals(direction)) {
+						colonne++;
+					} else
+						retour = -1;
 
-				if (trace == 1) {
-					terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
+					if (trace == 1) {
+						terrain.getGrille()[ligne][colonne].setBackground(Color.RED);
 
-					terrain.getGrille()[ligne][colonne].setVisitee(true);
+						terrain.getGrille()[ligne][colonne].setVisitee(true);
+					}
+					if (trace == 2) {
+						terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
+
+						terrain.getGrille()[ligne][colonne].setVisitee(true);
+					}
+					// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+					if("electrique".equals(engineType)) {
+						batteryPercent -= 1;
+					}
+				}else {
+					System.out.println("Batterie trop faible pour reculer");
+					retour = -3;
 				}
-				if (trace == 2) {
-					terrain.getGrille()[ligne][colonne].setBackground(Color.BLUE);
 
-					terrain.getGrille()[ligne][colonne].setVisitee(true);
-				}
 			}
 		// on redessine le terrain
 		terrain.repaint();
@@ -263,10 +282,7 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-		if("electrique".equals(engineType)) {
-			batteryPercent -= 1;
-		}
+
 		return retour;
 
 	}
@@ -284,16 +300,27 @@ public class Robot {
 		if (robotDetruit)
 			retour = -2;
 		else {
-			// on peut faire tourner le robot vers la droite
-			if ("sud".equals(direction)) {
-				direction = "ouest";
-			} else if ("nord".equals(direction)) {
-				direction = "est";
-			} else if ("est".equals(direction)) {
-				direction = "sud";
-			} else if ("ouest".equals(direction)) {
-				direction = "nord";
+			if("thermique".equals(engineType) || ("electrique".equals(engineType) && batteryPercent >=0.5)){
+				compterObstacles(1);
+				// on peut faire tourner le robot vers la droite
+				if ("sud".equals(direction)) {
+					direction = "ouest";
+				} else if ("nord".equals(direction)) {
+					direction = "est";
+				} else if ("est".equals(direction)) {
+					direction = "sud";
+				} else if ("ouest".equals(direction)) {
+					direction = "nord";
+				}
+				// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+				if("electrique".equals(engineType)) {
+					batteryPercent -= 0.5;
+				}
+			}else {
+				System.out.println("Batterie trop faible pour tourner");
+				retour = -3;
 			}
+
 		}
 		// on redessine le terrain
 		terrain.repaint();
@@ -303,10 +330,7 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-		if("electrique".equals(engineType)) {
-			batteryPercent -= 0.5;
-		}
+
 		return retour;
 	}
 
@@ -323,16 +347,27 @@ public class Robot {
 		if (robotDetruit)
 			retour = -2;
 		else {
-			// on peut faire tourner le robot vers la gauche
-			if ("sud".equals(direction)) {
-				direction = "est";
-			} else if ("nord".equals(direction)) {
-				direction = "ouest";
-			} else if ("est".equals(direction)) {
-				direction = "nord";
-			} else if ("ouest".equals(direction)) {
-				direction = "sud";
+			if("thermique".equals(engineType) || ("electrique".equals(engineType) && batteryPercent >=0.5)){
+				compterObstacles(1);
+				// on peut faire tourner le robot vers la gauche
+				if ("sud".equals(direction)) {
+					direction = "est";
+				} else if ("nord".equals(direction)) {
+					direction = "ouest";
+				} else if ("est".equals(direction)) {
+					direction = "nord";
+				} else if ("ouest".equals(direction)) {
+					direction = "sud";
+				}
+				// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+				if("electrique".equals(engineType)) {
+					batteryPercent -= 0.5;
+				}
+			}else {
+				System.out.println("Batterie trop faible pour tourner");
+				retour = -3;
 			}
+
 		}
 
 		// on redessine le terrain
@@ -343,10 +378,7 @@ public class Robot {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-		if("electrique".equals(engineType)) {
-			batteryPercent -= 0.5;
-		}
+
 		return retour;
 	}
 
@@ -379,13 +411,9 @@ public class Robot {
 				&& colonne < terrain.getNbColonnes() - 1
 				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
 			return false;
-		else {
-			// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-			if("electrique".equals(engineType)) {
-				batteryPercent -= 0.25;
-			}
+		else 
 			return true;
-		}
+
 
 	}
 
@@ -398,8 +426,38 @@ public class Robot {
 	 *         n'est présent devant le robot
 	 */
 	public boolean isObstacleDevantAvecConsommationBatterie() {
-		// TODO à compléter
-		return true;
+
+		// en fonction de la direction du robot, on teste s'il ne sort pas des
+		// limites du terrain, et si la case devant lui n'est pas de type
+		// Obstacle
+		if("electrique".equals(engineType) && batteryPercent<0.25) {
+			System.out.println("Batterie insuffisante pour le repérage d'obstable");
+			return false;
+		}
+
+		if ("nord".equals(direction)
+				&& ligne > 0
+				&& !(terrain.getGrille()[ligne - 1][colonne] instanceof Obstacle))
+			return false;
+		else if ("sud".equals(direction)
+				&& ligne < terrain.getNbLignes() - 1
+				&& !(terrain.getGrille()[ligne + 1][colonne] instanceof Obstacle))
+			return false;
+		else if ("ouest".equals(direction)
+				&& colonne > 0
+				&& !(terrain.getGrille()[ligne][colonne - 1] instanceof Obstacle))
+			return false;
+		else if ("est".equals(direction)
+				&& colonne < terrain.getNbColonnes() - 1
+				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
+			return false;
+		else {
+			// Si il s'agit d'un robot electrique on reduit son pourcentage de batterie
+			if("electrique".equals(engineType)) {
+				batteryPercent -= 0.25;
+			}
+			return true;
+		}
 	}
 
 	/**
@@ -430,15 +488,8 @@ public class Robot {
 				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
 			return false;
 
-		else {
-			// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
-			if("electrique".equals(engineType)) {
-				batteryPercent -= 0.25;
-			}
+		else 
 			return true;
-		}
-
-
 	}
 
 	/**
@@ -450,8 +501,39 @@ public class Robot {
 	 *         n'est présent devant le robot
 	 */
 	public boolean isObstacleDerriereAvecConsommationBatterie() {
-		// TODO à compléter
-		return true;
+
+		// en fonction de la direction du robot, on teste s'il ne sort pas des
+		// limites du terrain, et si la case derrière lui n'est pas de type
+		// Obstacle
+		if("electrique".equals(engineType) && batteryPercent<0.25) {
+			System.out.println("Batterie insuffisante pour le repérage d'obstable");
+			return false;
+		}
+		if ("sud".equals(direction)
+				&& ligne > 0
+				&& !(terrain.getGrille()[ligne - 1][colonne] instanceof Obstacle))
+			return false;
+		else if ("nord".equals(direction)
+				&& ligne < terrain.getNbLignes() - 1
+				&& !(terrain.getGrille()[ligne + 1][colonne] instanceof Obstacle))
+			return false;
+		else if ("est".equals(direction)
+				&& colonne > 0
+				&& !(terrain.getGrille()[ligne][colonne - 1] instanceof Obstacle))
+			return false;
+		else if ("ouest".equals(direction)
+				&& colonne < terrain.getNbColonnes() - 1
+				&& !(terrain.getGrille()[ligne][colonne + 1] instanceof Obstacle))
+			return false;
+
+		else {
+			// Si il s'agit d'un robot electrique on reduit sont pourcentage de batterie
+			if("electrique".equals(engineType)) {
+				batteryPercent -= 0.25;
+			}
+			return true;
+		}
+
 
 	}
 
@@ -472,12 +554,12 @@ public class Robot {
 		chocsNumber++;
 
 		// Animation visuelle du choc (rouge + image normale)
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 4; i++) {
 			String cheminImage = (i % 2 == 0) ? getCheminImageRobotMed() : getCheminImageRobot();
 			mettreAJourImage(cheminImage);
 			terrain.repaint();
 			try {
-				Thread.sleep(100); // petit délai pour rendre l’effet visible
+				Thread.sleep((int) (1000 / vitesse)); // petit délai pour rendre l’effet visible
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 			}
@@ -574,6 +656,24 @@ public class Robot {
 	}
 
 	/**
+	 * getter de l'attribut batteryPercent
+	 * 
+	 * @return l'attribut batteryPercent
+	 */
+	public double getBatteryPercent() {
+		return batteryPercent;
+	}
+
+	/**
+	 * getter de l'attribut obstaclesEncountered
+	 * 
+	 * @return obstaclesEncountered
+	 */
+
+	public ArrayList<Integer[]> getObstaclesEncountered() {
+		return obstaclesEncountered;
+	}
+	/**
 	 * getter de l'attribut terrain
 	 * 
 	 * @return l'attribut terrain
@@ -582,6 +682,15 @@ public class Robot {
 		return terrain;
 	}
 
+	/**
+	 * getter de robotDetruit
+	 * 
+	 * @return robotDetruit
+	 */
+
+	public boolean getRobotDetruit() {
+		return robotDetruit;
+	}
 	/**
 	 * setter de l'attribut terrain
 	 */
@@ -656,12 +765,78 @@ public class Robot {
 	protected String getCheminImageRobotMed() {
 		return "./data/robot_medical.png";
 	}
-	
-	public void compterObstacles() {
-		
+	/**
+	 * Gère le comptage et l'affichage des obstacles rencontrés par le robot.
+	 * 
+	 * @param mode 1 = comptage lors d'une détection d'obstacle, 2 = affichage du rapport.
+	 */
+
+	public void compterObstacles(int mode) {
+		if (isObstacleDevant() && mode == 1) {
+			int obsLine = ligne;
+			int obsCol = colonne;
+
+			// Détermination de la position de l’obstacle selon la direction
+			switch (direction) {
+			case "sud":
+				obsLine++;
+				break;
+			case "nord":
+				obsLine--;
+				break;
+			case "est":
+				obsCol++;
+				break;
+			case "ouest":
+				obsCol--;
+				break;
+			}
+
+			// Vérifie si l’obstacle a déjà été rencontré
+			boolean found = false;
+			for (Integer[] obs : obstaclesEncountered) {
+				if (obs[0] == obsLine && obs[1] == obsCol) {
+					obs[2]++; // Incrémente le compteur
+					found = true;
+					break;
+				}
+			}
+
+			// Si c’est un nouvel obstacle, on l’ajoute à la liste
+			if (!found && obsLine>=0 && obsCol>=0 && obsLine<10 && obsCol<10) {
+				obstaclesEncountered.add(new Integer[]{obsLine, obsCol, 1});
+			}
+		}
+		if(mode == 2) {
+			// --- Affichage final ---
+
+			System.out.println("\n===============================");
+			System.out.println("      RAPPORT D'OBSTACLES");
+			System.out.println("===============================\n");
+
+			System.out.println("Nombre total d'obstacles rencontrés : " + obstaclesEncountered.size());
+			System.out.println("Pourcentage de batterie restant    : " + batteryPercent + "%\n");
+
+			if (obstaclesEncountered.isEmpty()) {
+				System.out.println("Aucun obstacle rencontré pour le moment.");
+			} else {
+				System.out.println("Détails des obstacles rencontrés :\n");
+				System.out.println(String.format("%-10s %-10s %-10s", "Ligne", "Colonne", "Rencontres"));
+				System.out.println("------------------------------------------");
+				for (Integer[] obs : obstaclesEncountered) {
+					System.out.println(String.format("%-10d %-10d %-10d", obs[0], obs[1], obs[2]));
+				}
+			}
+
+			System.out.println("\n===============================\n");
+		}
+
 	}
-	
-	public void recharge() {
+
+	/**
+	 * recharge la batterie du robot mais seulement lorsqu'il est en position (0,0)
+	 */
+	public void chargerBatterie() {
 		if(!(ligne==0 && colonne==0)) {
 			System.out.println("La charge ne peux s'effectué qu'en (0,0)");
 			return;

@@ -155,7 +155,7 @@ public class Terrain extends JPanel {
 			int l = r.nextInt(nbLignes);
 			int c = r.nextInt(nbColonnes);
 
-			if (!isObstacleACoteNonBord(l, c)) {
+			if (!isObstacleACoteNonBord(l, c) && !(l==0 && c==0)) {
 				// on crée un obstacle et on le met à la bonne place dans la
 				// grille
 				grille[l][c] = new Obstacle(this, l, c);
