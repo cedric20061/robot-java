@@ -18,7 +18,7 @@ public class SimulateurAppX_V5 {
 		terrain.updateIHM(); 
 
 		double estBatterieRetour = estimerBatterieRetour(robot);
-		while(robot.getBatteryPercent() - estBatterieRetour > 15) {
+		while(robot.getBatteryPercent() - estBatterieRetour > 18) {
 			if(!robot.isObstacleDevantAvecConsommationBatterie()) {
 				robot.avancer();
 			}else 
@@ -53,49 +53,49 @@ public class SimulateurAppX_V5 {
 		System.out.println("Pourcentage de charge après rechargage: " + robot.getBatteryPercent());
 	}
 	public static void contournerObs(Robot robot) {
-	    String dir = robot.getDirection();
-	    int ligne = robot.getLigne();
-	    int colonne = robot.getColonne();
+		String dir = robot.getDirection();
+		int ligne = robot.getLigne();
+		int colonne = robot.getColonne();
 
-	    // === Cas 1 : bord bas (ligne proche de la limite) ===
-	    if (ligne >= 8 && "sud".equals(dir)) {
-	        // Contourne par la gauche (pas de place en bas)
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerDroite();
-	        robot.tournerDroite();
-	        robot.avancer();
-	        return;
-	    }
+		// === Cas 1 : bord bas (ligne proche de la limite) ===
+		if (ligne >= 8 && "sud".equals(dir)) {
+			// Contourne par la gauche (pas de place en bas)
+			robot.tournerGauche();
+			robot.avancer();
+			robot.tournerDroite();
+			robot.avancer();
+			robot.tournerDroite();
+			robot.tournerDroite();
+			robot.avancer();
+			return;
+		}
 
-	    // === Cas 2 : bord haut (ligne proche de 0) ===
-	    if (ligne <= 1 && "nord".equals(dir)) {
-	        // Contourne par la droite (pas de place en haut)
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        return;
-	    }
+		// === Cas 2 : bord haut (ligne proche de 0) ===
+		if (ligne <= 1 && "nord".equals(dir)) {
+			// Contourne par la droite (pas de place en haut)
+			robot.tournerDroite();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.tournerGauche();
+			robot.avancer();
+			return;
+		}
 
-	    // === Cas 3 : bord droit (colonne proche de la limite) ===
-	    if (colonne >= 8 && "est".equals(dir)) {
-	        // Contourne vers le bas
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        return;
-	    }
-/*
+		// === Cas 3 : bord droit (colonne proche de la limite) ===
+		if (colonne >= 8 && "est".equals(dir)) {
+			// Contourne vers le bas
+			robot.tournerDroite();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.tournerGauche();
+			robot.avancer();
+			return;
+		}
+		/*
 	    // === Cas 4 : bord gauche (colonne proche de 0) ===
 	    if (colonne <= 1 && "ouest".equals(dir)) {
 	        // Contourne vers le haut
@@ -109,46 +109,46 @@ public class SimulateurAppX_V5 {
 	        return;
 	    }*/
 
-	    // === Cas 5 : contournement standard, mais direction/position adaptative ===
-	    boolean contournerAGauche = true; // par défaut à gauche
+		// === Cas 5 : contournement standard, mais direction/position adaptative ===
+		boolean contournerAGauche = true; // par défaut à gauche
 
-	    // Cas où tourner à gauche serait dangereux car on est au bord
-	    switch (dir) {
-	        case "nord":
-	            if (colonne == 0) contournerAGauche = false; // si on est tout à gauche, on contourne à droite
-	            break;
-	        case "sud":
-	            if (colonne == 9) contournerAGauche = false; // tout à droite, contourner à droite
-	            break;
-	        case "est":
-	            if (ligne == 9) contournerAGauche = false; // tout en bas, contourner à droite
-	            break;
-	        case "ouest":
-	            if (ligne != 0) contournerAGauche = false; // tout en haut, contourner à droite
-	            break;
-	    }
+		// Cas où tourner à gauche serait dangereux car on est au bord
+		switch (dir) {
+		case "nord":
+			if (colonne == 0) contournerAGauche = false; // si on est tout à gauche, on contourne à droite
+			break;
+		case "sud":
+			if (colonne == 9) contournerAGauche = false; // tout à droite, contourner à droite
+			break;
+		case "est":
+			if (ligne == 9) contournerAGauche = false; // tout en bas, contourner à droite
+			break;
+		case "ouest":
+			if (ligne != 0) contournerAGauche = false; // tout en haut, contourner à droite
+			break;
+		}
 
-	    if (contournerAGauche) {
-	        // --- Contournement standard par la gauche ---
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.avancer();
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerGauche();
-	    } else {
-	        // --- Contournement standard par la droite ---
-	        robot.tournerDroite();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.avancer();
-	        robot.tournerGauche();
-	        robot.avancer();
-	        robot.tournerDroite();
-	    }
+		if (contournerAGauche) {
+			// --- Contournement standard par la gauche ---
+			robot.tournerGauche();
+			robot.avancer();
+			robot.tournerDroite();
+			robot.avancer();
+			robot.avancer();
+			robot.tournerDroite();
+			robot.avancer();
+			robot.tournerGauche();
+		} else {
+			// --- Contournement standard par la droite ---
+			robot.tournerDroite();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.avancer();
+			robot.avancer();
+			robot.tournerGauche();
+			robot.avancer();
+			robot.tournerDroite();
+		}
 	}
 
 
@@ -208,7 +208,17 @@ public class SimulateurAppX_V5 {
 
 			while (robot.getLigne() > 0) {
 				if (!isObstacleDevantSansConso(robot)) robot.avancer();
-				else contournerObs(robot);
+				else {
+					if(robot.getLigne() != 1) {
+						contournerObs(robot);
+					}else {
+						robot.tournerGauche();
+						robot.avancer();
+						robot.tournerDroite();
+						robot.avancer();
+						robot.tournerGauche();
+					}
+				}
 				if (robot.getLigne() == 0) break;
 			}
 
@@ -231,7 +241,17 @@ public class SimulateurAppX_V5 {
 
 			while (robot.getColonne() > 0) {
 				if (!isObstacleDevantSansConso(robot)) robot.avancer();
-				else contournerObs(robot);
+				else {
+					if(robot.getColonne() != 1) {
+						contournerObs(robot);
+					}else {
+						robot.tournerDroite();
+						robot.avancer();
+						robot.tournerGauche();
+						robot.avancer();
+						robot.tournerDroite();
+					}
+				}
 				if (robot.getColonne() == 0) break;
 			}
 
